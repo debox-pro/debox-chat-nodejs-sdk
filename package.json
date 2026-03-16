@@ -1,0 +1,20 @@
+{
+  "name": "debox-chat-nodejs-sdk",
+  "version": "0.1.0",
+  "description": "Official Node.js SDK for DeBox Chat Service",
+  "main": "boxbotapi/index.js",
+  "type": "commonjs",
+  "keywords": [
+    "debox",
+    "bot",
+    "sdk",
+    "nodejs"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test ./test/*.test.js"
+  }
+}
