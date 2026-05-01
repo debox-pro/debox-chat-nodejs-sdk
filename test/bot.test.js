@@ -13,7 +13,7 @@ class MockClient {
   async Do(req) {
     this.calls.push(req);
 
-    if (req.url.endsWith("/getMe")) {
+    if (req.url.endsWith("/bot/getMe")) {
       return {
         status_code: 200,
         status: "OK",
@@ -27,7 +27,7 @@ class MockClient {
       };
     }
 
-    if (req.url.endsWith("/sendMessage")) {
+    if (req.url.endsWith("/bot/sendMessage")) {
       return {
         status_code: 200,
         status: "OK",
@@ -45,7 +45,7 @@ class MockClient {
       };
     }
 
-    if (req.url.endsWith("/getUpdates")) {
+    if (req.url.endsWith("/bot/getUpdates")) {
       return {
         status_code: 200,
         status: "OK",
@@ -85,13 +85,20 @@ class MockClient {
 }
 
 test("NewBotAPIWithClient", async () => {
-  const bot = await boxbotapi.NewBotAPIWithClient("token_x", boxbotapi.APIEndpoint, new MockClient());
+  const mock = new MockClient();
+  const bot = await boxbotapi.NewBotAPIWithClient("token_x", "secret_x", boxbotapi.APIEndpoint, mock);
   assert.equal(bot.Self.UserId, "bot_1");
   assert.equal(bot.Self.Name, "mybot");
+  assert.equal(mock.calls.length, 1);
+  assert.equal(mock.calls[0].headers["X-API-KEY"], "token_x");
+  assert.ok(mock.calls[0].headers.nonce);
+  assert.ok(mock.calls[0].headers.timestamp);
+  assert.ok(mock.calls[0].headers.signature);
+  assert.ok(mock.calls[0].headers["X-Request-Id"]);
 });
 
 test("Send message", async () => {
-  const bot = await boxbotapi.NewBotAPIWithClient("token_x", boxbotapi.APIEndpoint, new MockClient());
+  const bot = await boxbotapi.NewBotAPIWithClient("token_x", "secret_x", boxbotapi.APIEndpoint, new MockClient());
   const msg = boxbotapi.NewMessage("chat_1", "private", "hello");
   const result = await bot.Send(msg);
 
@@ -101,7 +108,7 @@ test("Send message", async () => {
 });
 
 test("GetUpdates", async () => {
-  const bot = await boxbotapi.NewBotAPIWithClient("token_x", boxbotapi.APIEndpoint, new MockClient());
+  const bot = await boxbotapi.NewBotAPIWithClient("token_x", "secret_x", boxbotapi.APIEndpoint, new MockClient());
   const updates = await bot.GetUpdates(boxbotapi.NewUpdate(0));
 
   assert.equal(updates.length, 1);
@@ -110,7 +117,7 @@ test("GetUpdates", async () => {
 });
 
 test("MakeRequest non-200", async () => {
-  const bot = await boxbotapi.NewBotAPIWithClient("token_x", boxbotapi.APIEndpoint, new MockClient());
+  const bot = await boxbotapi.NewBotAPIWithClient("token_x", "secret_x", boxbotapi.APIEndpoint, new MockClient());
   await assert.rejects(async () => {
     await bot.MakeRequest("bad", new boxbotapi.Params());
   }, (err) => err instanceof boxbotapi.ErrorEx && err.Code === 500);
@@ -122,7 +129,7 @@ test("EscapeText", () => {
 });
 
 test("HandleUpdate", async () => {
-  const bot = await boxbotapi.NewBotAPIWithClient("token_x", boxbotapi.APIEndpoint, new MockClient());
+  const bot = await boxbotapi.NewBotAPIWithClient("token_x", "secret_x", boxbotapi.APIEndpoint, new MockClient());
   const update = bot.HandleUpdate({
     method: "POST",
     body: { id: 7, message: { text: "x", chat: { id: "c1", type: "private" } } },
@@ -137,6 +144,6 @@ test("HandleUpdate", async () => {
 test("SetHost", () => {
   const old = boxbotapi.APIEndpoint;
   boxbotapi.SetHost("https://example.com");
-  assert.equal(boxbotapi.APIEndpoint, "https://example.com/openapi/bot%s/%s");
+  assert.equal(boxbotapi.APIEndpoint, "https://example.com/openapi/%s");
   boxbotapi.APIEndpoint = old;
 });

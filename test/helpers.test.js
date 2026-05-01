@@ -32,6 +32,6 @@ test("NewMessage and keyboard helpers", () => {
 
   assert.equal(msg.ChatID, "chat_1");
   assert.equal(msg.ChatType, "group");
-  assert.equal(msg.method(), "sendMessage");
+  assert.equal(msg.method(), "bot/sendMessage");
   assert.ok(msg.ReplyMarkup);
 });

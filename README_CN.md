@@ -14,12 +14,20 @@ npm install debox-chat-nodejs-sdk
 const boxbotapi = require("debox-chat-nodejs-sdk");
 
 async function main() {
-  const bot = await boxbotapi.NewBotAPI("YOUR_BOT_API_KEY");
+  const bot = await boxbotapi.NewBotAPI("YOUR_BOT_API_KEY", "YOUR_BOT_API_SECRET");
   const msg = boxbotapi.NewMessage("DEBOX_USER_ID", "private", "你好，DeBox!");
   await bot.Send(msg);
 }
 
 main().catch(console.error);
+```
+
+## 运行 Demo
+
+```bash
+export DEBOX_BOT_API_KEY="YOUR_BOT_API_KEY"
+export DEBOX_BOT_API_SECRET="YOUR_BOT_API_SECRET"
+npm start
 ```
 
 ## 文档

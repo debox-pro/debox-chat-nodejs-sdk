@@ -3,7 +3,7 @@
 const { Params } = require("./params");
 
 const state = {
-  APIEndpoint: "https://open.debox.pro/openapi/bot%s/%s",
+  APIEndpoint: "https://open.debox.pro/openapi/%s",
   Debug: false,
   MessageListener: false,
 };
@@ -13,6 +13,9 @@ const ErrAPIForbidden = "forbidden";
 const ModeMarkdown = "Markdown";
 const ModeMarkdownV2 = "MarkdownV2";
 const ModeHTML = "HTML";
+const ModeVideo = "video";
+const ModeImage = "image";
+const ModeFile = "file";
 const ModeRichText = "richtext";
 const UpdateTypeMessage = "message";
 const ErrBadURL = "bad or empty url";
@@ -122,13 +125,13 @@ class MessageConfig {
   }
 
   method() {
-    return "sendMessage";
+    return "bot/sendMessage";
   }
 }
 
 class MessageToFansConfig extends MessageConfig {
   method() {
-    return "sendMessageToFans";
+    return "bot/sendMessageToFans";
   }
 }
 
@@ -195,7 +198,7 @@ class EditMessageTextConfig {
   }
 
   method() {
-    return "editMessageText";
+    return "bot/editMessageText";
   }
 }
 
@@ -208,7 +211,7 @@ class UpdateConfig {
   }
 
   method() {
-    return "getUpdates";
+    return "bot/getUpdates";
   }
 
   params() {
@@ -269,6 +272,9 @@ module.exports = {
   BaseEdit,
   EditMessageTextConfig,
   ModeHTML,
+  ModeVideo,
+  ModeImage,
+  ModeFile,
   ModeMarkdown,
   ModeMarkdownV2,
   ModeRichText,

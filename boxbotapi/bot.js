@@ -1,4 +1,5 @@
 "use strict";
+const crypto = require("node:crypto");
 
 const {
   APIEndpoint,
@@ -29,8 +30,9 @@ class DefaultHTTPClient {
 }
 
 class BotAPI {
-  constructor(token, apiEndpoint, client) {
+  constructor(token, apiSecret, apiEndpoint, client) {
     this.Token = token;
+    this.ApiSecret = apiSecret;
     this.Debug = false;
     this.Buffer = 100;
     this.Self = new User();
@@ -50,8 +52,9 @@ class BotAPI {
       console.log("Endpoint:", endpoint, "params:", p.toObject());
     }
 
-    const methodURL = this.apiEndpoint.replace("%s", this.Token).replace("%s", endpoint);
+    const methodURL = this.apiEndpoint.replace("%s", endpoint);
     const body = new URLSearchParams(p.toObject()).toString();
+    const { nonce, timestamp, signature } = this.getSignature();
 
     const req = {
       method: "POST",
@@ -60,6 +63,10 @@ class BotAPI {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         "X-API-KEY": this.Token,
+        nonce,
+        timestamp,
+        signature,
+        "X-Request-Id": crypto.randomUUID(),
       },
     };
 
@@ -86,13 +93,20 @@ class BotAPI {
     return apiResp;
   }
 
+  getSignature() {
+    const nonce = String(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    const signature = crypto.createHash("sha1").update(`${this.ApiSecret}${nonce}${timestamp}`).digest("hex");
+    return { nonce, timestamp, signature };
+  }
+
   decodeAPIResponse(responseBody) {
     const payload = typeof responseBody === "string" ? JSON.parse(responseBody) : responseBody;
     return APIResponse.fromJSONDict(payload);
   }
 
   async GetMe() {
-    const resp = await this.MakeRequest("getMe", null);
+    const resp = await this.MakeRequest("bot/getMe", null);
     return User.fromDict(resp.Result) || new User();
   }
 
@@ -179,22 +193,22 @@ class BotAPI {
 
 function SetHost(host) {
   if (host) {
-    setAPIEndpointValue(`${host}/openapi/bot%s/%s`);
+    setAPIEndpointValue(`${host}/openapi/%s`);
   } else {
     console.warn("SetHost error,host is empty,use the default host now");
   }
 }
 
-async function NewBotAPI(token) {
-  return NewBotAPIWithClient(token, APIEndpoint(), new DefaultHTTPClient());
+async function NewBotAPI(token, apiSecret) {
+  return NewBotAPIWithClient(token, apiSecret, APIEndpoint(), new DefaultHTTPClient());
 }
 
-async function NewBotAPIWithAPIEndpoint(token, apiEndpoint) {
-  return NewBotAPIWithClient(token, apiEndpoint, new DefaultHTTPClient());
+async function NewBotAPIWithAPIEndpoint(token, apiSecret, apiEndpoint) {
+  return NewBotAPIWithClient(token, apiSecret, apiEndpoint, new DefaultHTTPClient());
 }
 
-async function NewBotAPIWithClient(token, apiEndpoint, client) {
-  const bot = new BotAPI(token, apiEndpoint, client);
+async function NewBotAPIWithClient(token, apiSecret, apiEndpoint, client) {
+  const bot = new BotAPI(token, apiSecret, apiEndpoint, client);
   bot.Self = await bot.GetMe();
   return bot;
 }
