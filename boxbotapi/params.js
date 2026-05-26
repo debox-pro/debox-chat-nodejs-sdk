@@ -1,6 +1,10 @@
 "use strict";
 
 function camelToSnake(name) {
+  // Handle common acronyms first
+  if (name === "URL") {
+    return "url";
+  }
   let out = "";
   for (let i = 0; i < name.length; i += 1) {
     const ch = name[i];
